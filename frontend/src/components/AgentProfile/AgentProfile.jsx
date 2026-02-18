@@ -26,6 +26,15 @@ export default function AgentProfile({agent}) {
     const [activeTab, setActiveTab] = useState('memory')
     const moodLabel = useMemo(() => moodToLabel(agent?.mood), [agent])
 
+    // Отладочное логирование
+    if (agent) {
+        console.log('AgentProfile received agent:', agent)
+        console.log('Agent plans:', agent.plans)
+        console.log('Plans length:', agent.plans?.length)
+        console.log('Plans type:', typeof agent.plans)
+        console.log('Is array?', Array.isArray(agent.plans))
+    }
+
     if (!agent) {
         return <div className={styles.empty}>Агент не найден</div>
     }
@@ -126,7 +135,7 @@ export default function AgentProfile({agent}) {
             </div>
 
             <div className={styles.panel}>
-                <h3 style={{marginTop: 0}}>Отправитf\ь сообщение</h3>
+                <h3 style={{marginTop: 0}}>Отправить сообщение</h3>
                 <MessageInput agentId={agent.id}/>
             </div>
         </div>

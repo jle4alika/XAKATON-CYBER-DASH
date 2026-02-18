@@ -42,18 +42,29 @@ async def _build_agent_payload(
     plans: List[Plan] = []
     interactions: List[Interaction] = []
     memories: List[MemorySchema] = []
+    serialized_plans: List[PlanSchema] = []
 
     if detailed:
-        plan_rows = await session.execute(select(Plan).where(Plan.agent_id == agent.id))
+        # Загружаем последние 20 планов, отсортированные по дате создания (новые первыми)
+        plan_rows = await session.execute(
+            select(Plan)
+            .where(Plan.agent_id == agent.id)
+            .order_by(Plan.created_at.desc())
+            .limit(20)
+        )
         plans = plan_rows.scalars().all()
+        logger.info(f"Загружено планов для агента {agent.id}: {len(plans)}")
 
+        # Загружаем последние 20 взаимодействий, отсортированные по дате (новые первыми)
         inter_rows = await session.execute(
             select(Interaction)
             .where(Interaction.agent_id == agent.id)
-            .order_by(Interaction.timestamp)
+            .order_by(Interaction.timestamp.desc())
+            .limit(20)
         )
         interactions = inter_rows.scalars().all()
 
+        # Загружаем последние 20 воспоминаний
         memory_items = await memory_store.fetch_agent_memories(agent.id, limit=20)
         memories = [
             MemorySchema(
@@ -65,6 +76,17 @@ async def _build_agent_payload(
             for m in memory_items
         ]
 
+    # Сериализуем планы
+    if plans:
+        for p in plans:
+            try:
+                serialized_plan = PlanSchema.model_validate(p)
+                serialized_plans.append(serialized_plan)
+            except Exception as e:
+                logger.error(f"Ошибка при сериализации плана {p.id}: {e}")
+
+    logger.info(f"Сериализовано планов для агента {agent.id}: {len(serialized_plans)}")
+
     return AgentSchema(
         id=agent.id,
         name=agent.name,
@@ -74,9 +96,9 @@ async def _build_agent_payload(
         persona=agent.persona or {},
         current_task=agent.current_task,
         memories=memories,
-        plans=[PlanSchema.from_orm(p) for p in plans] if plans else [],
+        plans=serialized_plans,
         interactions=(
-            [InteractionSchema.from_orm(i) for i in interactions]
+            [InteractionSchema.model_validate(i) for i in interactions]
             if interactions
             else []
         ),

@@ -5,6 +5,7 @@ import styles from './Navbar.module.css';
 export default function Navbar() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -33,11 +34,22 @@ export default function Navbar() {
             }
         };
 
+        // Обработчик скролла для добавления фона navbar
+        const handleScroll = () => {
+            const scrollPosition = window.scrollY || document.documentElement.scrollTop;
+            setIsScrolled(scrollPosition > 20);
+        };
+
         window.addEventListener('resize', handleResize);
+        window.addEventListener('scroll', handleScroll);
+
+        // Проверяем начальную позицию скролла
+        handleScroll();
 
         return () => {
             window.removeEventListener('storage', checkAuthState);
             window.removeEventListener('resize', handleResize);
+            window.removeEventListener('scroll', handleScroll);
             clearInterval(intervalId);
         };
     }, []);
@@ -69,7 +81,7 @@ export default function Navbar() {
 
     return (
         <>
-            <header className={styles.navbar}>
+            <header className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}>
                 <div className={styles.navbarInner}>
                     <div className={styles.brand}>
                         <Link

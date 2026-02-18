@@ -1,6 +1,7 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef, useCallback} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {API_BASE, getEvents} from '../../services/api';
+import {connectEventStream} from '../../services/websocket';
 import styles from './GroupChatPage.module.css';
 
 export default function GroupChatPage() {
@@ -11,10 +12,15 @@ export default function GroupChatPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [chatEvents, setChatEvents] = useState([]);
+    const [allChatEvents, setAllChatEvents] = useState([]);
+    const [displayedCount, setDisplayedCount] = useState(50);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [messageText, setMessageText] = useState('');
     const [sending, setSending] = useState(false);
-    const [expandedChatIds, setExpandedChatIds] = useState(new Set());
-    const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+
+    const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
+    const loadMoreTriggerRef = useRef(null);
 
     // Form states
     const [chatName, setChatName] = useState('');
@@ -27,6 +33,7 @@ export default function GroupChatPage() {
     useEffect(() => {
         fetchGroupChats();
         fetchAgents();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchGroupChats = async () => {
@@ -181,38 +188,158 @@ export default function GroupChatPage() {
 
     const selectChat = (chat) => {
         setSelectedChat(chat);
-        setDescriptionExpanded(false);
     };
 
-    const loadChatEvents = async (chat) => {
+    const loadChatEvents = async (chat, reset = true) => {
         if (!chat) {
             setChatEvents([]);
+            setAllChatEvents([]);
+            setDisplayedCount(50);
             return;
         }
         try {
             const allEvents = await getEvents();
             const ids = new Set(chat.agent_ids || []);
-            const filtered = allEvents.filter(
-                (ev) =>
-                    (ev.actor_id && ids.has(ev.actor_id)) ||
-                    (ev.target_id && ids.has(ev.target_id))
-            );
+            const chatIdStr = String(chat.id);
+
+            const filtered = allEvents.filter((ev) => {
+                // Проверяем события от агентов чата
+                if (ev.actor_id && ids.has(ev.actor_id)) return true;
+                if (ev.target_id && ids.has(ev.target_id)) return true;
+
+                // Проверяем групповые сообщения в этом чате
+                if (ev.type === 'chat_group') {
+                    try {
+                        const metadata = typeof ev.metadata_json === 'string'
+                            ? JSON.parse(ev.metadata_json)
+                            : ev.metadata_json;
+                        if (metadata && String(metadata.group_chat_id) === chatIdStr) {
+                            return true;
+                        }
+                    } catch {
+                        // Игнорируем ошибки парсинга
+                    }
+                }
+
+                return false;
+            });
+
             filtered.sort(
                 (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
             );
-            setChatEvents(filtered);
+
+            if (reset) {
+                setAllChatEvents(filtered);
+                setDisplayedCount(50);
+                setChatEvents(filtered.slice(-50));
+            } else {
+                setAllChatEvents(filtered);
+                setChatEvents(filtered.slice(-displayedCount));
+            }
         } catch (err) {
             console.error('Ошибка при загрузке сообщений чата', err);
         }
     };
 
+    const loadMoreMessages = useCallback(() => {
+        if (loadingMore || displayedCount >= allChatEvents.length) return;
+
+        setLoadingMore(true);
+        const newCount = Math.min(displayedCount + 50, allChatEvents.length);
+        setDisplayedCount(newCount);
+        setChatEvents(allChatEvents.slice(-newCount));
+        setLoadingMore(false);
+    }, [allChatEvents, displayedCount, loadingMore]);
+
+    // Intersection Observer для автоматической подгрузки при скролле вверх
+    useEffect(() => {
+        if (!loadMoreTriggerRef.current) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !loadingMore && displayedCount < allChatEvents.length) {
+                    loadMoreMessages();
+                }
+            },
+            {threshold: 0.1}
+        );
+
+        observer.observe(loadMoreTriggerRef.current);
+
+        return () => observer.disconnect();
+    }, [loadMoreMessages, loadingMore, displayedCount, allChatEvents.length]);
+
+    // Автоматический скролл вниз при открытии чата или новых сообщениях
+    const scrollToBottom = useCallback(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({behavior: 'smooth', block: 'end'});
+        }
+    }, []);
+
     useEffect(() => {
         if (selectedChat) {
-            loadChatEvents(selectedChat);
+            loadChatEvents(selectedChat, true);
         } else {
             setChatEvents([]);
+            setAllChatEvents([]);
+            setDisplayedCount(50);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedChat]);
+
+    // Скролл вниз при загрузке сообщений или отправке нового
+    useEffect(() => {
+        if (chatEvents.length > 0) {
+            setTimeout(scrollToBottom, 100);
+        }
+    }, [chatEvents.length, scrollToBottom]);
+
+    // WebSocket подписка на новые события + периодическая подгрузка
+    useEffect(() => {
+        if (!selectedChat) return;
+
+        const chatIdStr = String(selectedChat.id);
+        const ids = new Set(selectedChat.agent_ids || []);
+
+        // WebSocket подписка
+        const ws = connectEventStream((payload) => {
+            if (payload.type === 'event_created' && payload.data) {
+                const event = payload.data;
+
+                // Проверяем, относится ли событие к текущему чату
+                const isRelevant =
+                    (event.actor_id && ids.has(event.actor_id)) ||
+                    (event.target_id && ids.has(event.target_id)) ||
+                    (event.type === 'chat_group' && event.metadata_json &&
+                        (() => {
+                            try {
+                                const metadata = typeof event.metadata_json === 'string'
+                                    ? JSON.parse(event.metadata_json)
+                                    : event.metadata_json;
+                                return metadata && String(metadata.group_chat_id) === chatIdStr;
+                            } catch {
+                                return false;
+                            }
+                        })());
+
+                if (isRelevant) {
+                    // Перезагружаем события чата
+                    loadChatEvents(selectedChat, false);
+                }
+            }
+        });
+
+        // Периодическая подгрузка сообщений (как в EventStream)
+        const intervalId = setInterval(() => {
+            loadChatEvents(selectedChat, false);
+        }, 2000); // Обновляем каждые 2 секунды
+
+        return () => {
+            ws.close();
+            clearInterval(intervalId);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedChat?.id]);
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
@@ -239,9 +366,12 @@ export default function GroupChatPage() {
             });
 
             setMessageText('');
-            if (selectedChat) {
-                await loadChatEvents(selectedChat);
-            }
+            // Небольшая задержка перед перезагрузкой, чтобы сервер успел обработать
+            setTimeout(async () => {
+                if (selectedChat) {
+                    await loadChatEvents(selectedChat, false);
+                }
+            }, 300);
         } catch (err) {
             setError('Ошибка при отправке сообщения в чат');
             console.error(err);
@@ -250,17 +380,6 @@ export default function GroupChatPage() {
         }
     };
 
-    const toggleChatDescription = (chatId) => {
-        setExpandedChatIds((prev) => {
-            const next = new Set(prev);
-            if (next.has(chatId)) {
-                next.delete(chatId);
-            } else {
-                next.add(chatId);
-            }
-            return next;
-        });
-    };
 
     return (
         <div className="stack page-container">
@@ -377,38 +496,6 @@ export default function GroupChatPage() {
                                             Удалить
                                         </button>
                                     </div>
-                                    {chat.description && (
-                                        <div className={styles.chatDescriptionWrapper}>
-                                            {!expandedChatIds.has(chat.id) ? (
-                                                <button
-                                                    type="button"
-                                                    className={styles.toggleDescription}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleChatDescription(chat.id);
-                                                    }}
-                                                >
-                                                    Показать описание
-                                                </button>
-                                            ) : (
-                                                <>
-                                                    <p className={styles.chatDescription}>
-                                                        {chat.description}
-                                                    </p>
-                                                    <button
-                                                        type="button"
-                                                        className={styles.toggleDescription}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            toggleChatDescription(chat.id);
-                                                        }}
-                                                    >
-                                                        Свернуть
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
                                     <div className={styles.chatMeta}>
                                         <span>Агентов: {chat.agent_ids.length}</span>
                                         <span>
@@ -430,67 +517,110 @@ export default function GroupChatPage() {
 
                             {selectedChat.description && (
                                 <div className={styles.selectedChatDescriptionWrapper}>
-                                    {!descriptionExpanded ? (
-                                        <button
-                                            type="button"
-                                            className={styles.toggleDescription}
-                                            onClick={() => setDescriptionExpanded(true)}
-                                        >
-                                            Показать описание
-                                        </button>
-                                    ) : (
-                                        <>
-                                            <p className={styles.selectedChatDescription}>
-                                                {selectedChat.description}
-                                            </p>
-                                            <button
-                                                type="button"
-                                                className={styles.toggleDescription}
-                                                onClick={() => setDescriptionExpanded(false)}
-                                            >
-                                                Свернуть
-                                            </button>
-                                        </>
-                                    )}
+                                    <p className={styles.selectedChatDescription}>
+                                        {selectedChat.description}
+                                    </p>
                                 </div>
                             )}
 
                             <div className={styles.selectedChatAgents}>
-                                <h3>Участники чата</h3>
-                                <ul>
+                                <h3>Участники чата ({selectedChat.agent_ids.length})</h3>
+                                <div className={styles.agentsGrid}>
                                     {selectedChat.agent_ids.map((agentId) => {
                                         const agent = agents.find((a) => a.id === agentId);
-                                        return agent ? <li key={agentId}>{agent.name}</li> : null;
+                                        if (!agent) return null;
+
+                                        const moodColor = agent.mood >= 0.7 ? 'var(--accent-green)' :
+                                            agent.mood >= 0.4 ? 'var(--accent-yellow)' :
+                                                'var(--accent-red)';
+                                        const moodLabel = agent.mood >= 0.7 ? 'радостное' :
+                                            agent.mood >= 0.4 ? 'нейтральное' :
+                                                'подавленное';
+
+                                        return (
+                                            <div key={agentId} className={styles.agentCard}>
+                                                <div className={styles.agentCardHeader}>
+                                                    <span className={styles.agentName}>{agent.name}</span>
+                                                    <span
+                                                        className={styles.moodIndicator}
+                                                        style={{backgroundColor: moodColor}}
+                                                        title={`Настроение: ${moodLabel} (${agent.mood.toFixed(2)})`}
+                                                    />
+                                                </div>
+                                                <div className={styles.agentCardInfo}>
+                                                    <span className={styles.agentMood}>
+                                                        Настроение: {moodLabel}
+                                                    </span>
+                                                    <span className={styles.agentEnergy}>
+                                                        Энергия: {Math.round(agent.energy ?? 0)}%
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
                                     })}
-                                </ul>
+                                </div>
                             </div>
 
                             <div className={styles.chatMessages}>
-                                <h3>Сообщения</h3>
-                                <div className={styles.messagesList}>
+                                <h3>Сообщения {chatEvents.length > 0 && `(${chatEvents.length}${allChatEvents.length > displayedCount ? ` из ${allChatEvents.length}` : ''})`}</h3>
+                                <div
+                                    className={styles.messagesList}
+                                    ref={messagesContainerRef}
+                                >
                                     {chatEvents.length === 0 ? (
                                         <p className={styles.noMessages}>Сообщений пока нет</p>
                                     ) : (
-                                        <ul>
-                                            {chatEvents.map((event) => (
-                                                <li key={event.id} className={styles.messageItem}>
-                                                    <div className={styles.messageBubble}>
-                                                        <div className={styles.messageText}>
-                                                            {event.description}
-                                                        </div>
-                                                        <div className={styles.messageMeta}>
-                                <span className={styles.messageTime}>
-                                  {event.timestamp
-                                      ? new Date(
-                                          event.timestamp,
-                                      ).toLocaleTimeString()
-                                      : ''}
-                                </span>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                        <>
+                                            {allChatEvents.length > displayedCount && (
+                                                <div ref={loadMoreTriggerRef} className={styles.loadMoreTrigger}>
+                                                    {loadingMore ? (
+                                                        <span className={styles.loadingText}>Загрузка...</span>
+                                                    ) : (
+                                                        <button
+                                                            className={styles.loadMoreButton}
+                                                            onClick={loadMoreMessages}
+                                                        >
+                                                            Загрузить еще ({allChatEvents.length - displayedCount})
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                            <ul>
+                                                {chatEvents.map((event) => {
+                                                    const agent = event.actor_id
+                                                        ? agents.find((a) => a.id === event.actor_id)
+                                                        : null;
+
+                                                    return (
+                                                        <li key={event.id} className={styles.messageItem}>
+                                                            <div className={styles.messageBubble}>
+                                                                {agent && (
+                                                                    <div className={styles.messageAuthor}>
+                                                                        {agent.name}
+                                                                    </div>
+                                                                )}
+                                                                <div className={styles.messageText}>
+                                                                    {event.description}
+                                                                </div>
+                                                                <div className={styles.messageMeta}>
+                                                                    <span className={styles.messageTime}>
+                                                                        {event.timestamp
+                                                                            ? new Date(event.timestamp).toLocaleString('ru-RU', {
+                                                                                day: '2-digit',
+                                                                                month: '2-digit',
+                                                                                hour: '2-digit',
+                                                                                minute: '2-digit'
+                                                                            })
+                                                                            : ''}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                            <div ref={messagesEndRef}/>
+                                        </>
                                     )}
                                 </div>
 

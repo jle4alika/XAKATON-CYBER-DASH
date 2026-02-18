@@ -12,9 +12,16 @@ export default function AgentPage() {
     const error = useAgentStore((state) => state.error)
     const fetchAgentById = useAgentStore((state) => state.fetchAgentById)
 
-    const agent =
-        (selectedAgent && `${selectedAgent.id}` === `${id}` && selectedAgent) ||
-        agents.find((a) => `${a.id}` === `${id}`)
+    // Всегда используем selectedAgent если он есть и соответствует ID, иначе ищем в списке
+    // selectedAgent содержит полные данные включая планы, взаимодействия и память
+    const agent = selectedAgent && `${selectedAgent.id}` === `${id}`
+        ? selectedAgent
+        : agents.find((a) => `${a.id}` === `${id}`)
+
+    // Отладочное логирование
+    console.log('AgentPage - agent:', agent)
+    console.log('AgentPage - selectedAgent:', selectedAgent)
+    console.log('AgentPage - agent plans:', agent?.plans)
 
     useEffect(() => {
         if (id) {
@@ -24,15 +31,17 @@ export default function AgentPage() {
 
     return (
         <div className={`${styles.container} stack page-container`}>
-            <div className="flex-between">
-                <h2 style={{margin: 0}}>Профиль агента</h2>
-                <Link to="/dashboard" className="btn">
+            <div className={styles.header}>
+                <h2 className={styles.title}>Профиль агента</h2>
+                <Link to="/dashboard" className={styles.backButton}>
                     ← Дашборд
                 </Link>
             </div>
             {loading && <div className="status">Загрузка агента...</div>}
             {error && <div className="error">{error}</div>}
-            <AgentProfile agent={agent}/>
+            <div className={styles.profilePanel}>
+                <AgentProfile agent={agent}/>
+            </div>
         </div>
     )
 }

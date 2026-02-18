@@ -34,7 +34,13 @@ export default function TimeControlPanel() {
                         <span>2.75x</span>
                         <span>5x</span>
                     </div>
-                    <div className={styles.valueBadge} aria-hidden="true">
+                    <div
+                        className={styles.valueBadge}
+                        aria-hidden="true"
+                        style={{
+                            left: `calc(${((speed - 0.5) / 4.5) * 100}% - 12px)`
+                        }}
+                    >
                         {speed}x
                     </div>
                 </div>

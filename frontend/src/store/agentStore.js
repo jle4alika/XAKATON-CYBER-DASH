@@ -73,6 +73,8 @@ const useAgentStore = create((set, get) => ({
         set({loading: true, error: null})
         try {
             const data = await getAgent(id)
+            console.log('Agent data received:', data)
+            console.log('Plans in data:', data?.plans)
             set({selectedAgent: data})
         } catch (err) {
             const local = get().agents.find((a) => `${a.id}` === `${id}`) || fallbackAgents.find((a) => `${a.id}` === `${id}`)

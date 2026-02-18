@@ -14,6 +14,7 @@ export default function AgentCard({agent}) {
     const moodColor = useMemo(() => moodToColor(agent?.mood ?? 0.5), [agent])
     const deleteAgent = useAgentStore((state) => state.deleteAgent)
     const [isDeleting, setIsDeleting] = useState(false)
+    const [isCopied, setIsCopied] = useState(false)
 
     if (!agent) return null
 
@@ -22,6 +23,33 @@ export default function AgentCard({agent}) {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
             goToProfile()
+        }
+    }
+
+    const handleCopyUUID = async (e) => {
+        e.stopPropagation() // Предотвращаем переход на профиль
+        try {
+            await navigator.clipboard.writeText(agent.id)
+            setIsCopied(true)
+            setTimeout(() => setIsCopied(false), 2000)
+        } catch (err) {
+            console.error('Ошибка при копировании UUID:', err)
+            // Fallback для старых браузеров
+            const textArea = document.createElement('textarea')
+            textArea.value = agent.id
+            textArea.style.position = 'fixed'
+            textArea.style.opacity = '0'
+            document.body.appendChild(textArea)
+            textArea.select()
+            try {
+                document.execCommand('copy')
+                setIsCopied(true)
+                setTimeout(() => setIsCopied(false), 2000)
+            } catch (fallbackErr) {
+                console.error('Fallback копирование не удалось:', fallbackErr)
+                alert('Не удалось скопировать UUID')
+            }
+            document.body.removeChild(textArea)
         }
     }
 
@@ -57,6 +85,25 @@ export default function AgentCard({agent}) {
                 </div>
                 <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                     <span className={styles.moodIndicator} style={{background: moodColor}} aria-label="mood-indicator"/>
+                    <button
+                        onClick={handleCopyUUID}
+                        className={styles.copyButton}
+                        aria-label="Копировать UUID"
+                        title={isCopied ? 'UUID скопирован!' : 'Копировать UUID'}
+                    >
+                        {isCopied ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 strokeWidth="2">
+                                <path d="M20 6L9 17l-5-5"/>
+                            </svg>
+                        ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 strokeWidth="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                        )}
+                    </button>
                     <button
                         onClick={handleDelete}
                         disabled={isDeleting}

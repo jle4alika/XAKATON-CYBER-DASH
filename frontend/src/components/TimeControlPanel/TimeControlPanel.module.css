@@ -1,15 +1,16 @@
 .panel {
     border-radius: 14px;
     border: 3px solid var(--lime-dark);
-    padding: 14px;
-    transition: 0.5s;
-    box-shadow: var(--shadow);
-    height: 100%; /* растягиваем панель по высоте ячейки грида, как и ленту событий */
+    padding: 16px 18px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    height: 100%;
+
 }
 
 .panel:hover {
-    border: 5px solid var(--lime);
-    transform: translateY(-5px);
+    border-color: rgba(132, 204, 22, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .panelHeader {
@@ -21,6 +22,14 @@
 
 .panelTitle {
     margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(0, 24, 0, 0.3) 0%, rgba(0, 40, 0, 0.15) 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(132, 204, 22, 0.15);
+    margin: -4px -4px 12px -4px;
 }
 
 .muted {
@@ -51,9 +60,16 @@
 }
 
 .btnPrimary {
-    background: linear-gradient(120deg, var(--accent-blue), var(--accent-green));
-    border: none;
-    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.25);
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+    border: 1px solid rgba(132, 204, 22, 0.3);
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3),
+    0 2px 6px rgba(132, 204, 22, 0.2);
+}
+
+.btnPrimary:hover {
+    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4),
+    0 3px 8px rgba(132, 204, 22, 0.3);
+    transform: translateY(-1px);
 }
 
 .btnDanger {
@@ -95,10 +111,10 @@
     top: 20px;
     left: 0;
     height: 8px;
-    background: linear-gradient(to right, #6a82fb, #3f5efb);
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
     border-radius: 4px;
     z-index: 1;
-    box-shadow: 0 0 6px rgba(63, 94, 251, 0.4);
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.5), 0 0 4px rgba(132, 204, 22, 0.3);
     transition: width 0.1s ease;
 }
 
@@ -109,7 +125,7 @@
     appearance: none;
     width: 100%;
     height: 8px;
-    background: linear-gradient(to right, #e0e6ed, #a7b6d1);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     outline: none;
     cursor: pointer;
@@ -117,6 +133,7 @@
     z-index: 2;
     margin: 12px 0;
     transition: transform 0.2s ease;
+    border: 1px solid rgba(132, 204, 22, 0.2);
 }
 
 /* WebKit: трек */
@@ -130,30 +147,32 @@
 /* WebKit: ползунок */
 .input::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: linear-gradient(145deg, #7a91ff, #4a66ff);
-    border: 3px solid white;
-    box-shadow: 0 4px 10px rgba(63, 94, 251, 0.35),
-    0 2px 5px rgba(0, 0, 0, 0.15),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.6),
+    0 0 6px rgba(132, 204, 22, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: grab;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    margin-top: -12px;
+    margin-top: -8px;
 }
 
 .input::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    box-shadow: 0 6px 15px rgba(63, 94, 251, 0.45),
-    0 3px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.8),
+    0 0 8px rgba(132, 204, 22, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .input::-webkit-slider-thumb:active {
     cursor: grabbing;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(63, 94, 251, 0.4),
-    0 2px 6px rgba(0, 0, 0, 0.18);
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.7),
+    0 0 5px rgba(132, 204, 22, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* Firefox: трек */
@@ -166,37 +185,40 @@
 
 /* Firefox: ползунок */
 .input::-moz-range-thumb {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: linear-gradient(145deg, #7a91ff, #4a66ff);
-    border: 3px solid white;
-    box-shadow: 0 4px 10px rgba(63, 94, 251, 0.35),
-    0 2px 5px rgba(0, 0, 0, 0.15),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.6),
+    0 0 6px rgba(132, 204, 22, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: grab;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .input::-moz-range-thumb:hover {
-    transform: scale(1.2);
-    box-shadow: 0 6px 15px rgba(63, 94, 251, 0.45),
-    0 3px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.8),
+    0 0 8px rgba(132, 204, 22, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .input::-moz-range-thumb:active {
     cursor: grabbing;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(63, 94, 251, 0.4),
-    0 2px 6px rgba(0, 0, 0, 0.18);
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.7),
+    0 0 5px rgba(132, 204, 22, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* Доступность: фокус */
 .input:focus-visible::-webkit-slider-thumb,
 .input:focus-visible::-moz-range-thumb {
-    box-shadow: 0 0 0 4px rgba(63, 94, 251, 0.3),
-    0 4px 10px rgba(63, 94, 251, 0.35),
-    0 2px 5px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.3),
+    0 0 12px rgba(56, 189, 248, 0.6),
+    0 0 6px rgba(132, 204, 22, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
     outline: none;
 }
 
@@ -206,8 +228,9 @@
     justify-content: space-between;
     width: 100%;
     font-size: 12px;
-    color: #6b7280;
+    color: var(--muted);
     user-select: none;
+    margin-top: 4px;
 }
 
 /* Бейдж со значением над ползунком */
@@ -215,19 +238,17 @@
     position: absolute;
     top: -5px;
     left: 10px;
-    /*left: calc(*/
-    /*        ((var(--speed, 0.5) - 0.5) / 4.5) * 100% +*/
-    /*        (32px - 24px) * ((var(--speed, 0.5) - 0.5) / 4.5) -*/
-    /*        12px*/
-    /*);*/
     transform: translateX(-50%);
-    background: #3f5efb;
-    color: white;
+    background: linear-gradient(135deg, rgba(132, 204, 22, 0.2), rgba(56, 189, 248, 0.2));
+    backdrop-filter: blur(10px);
+    color: #fff;
     font-size: 13px;
     font-weight: 600;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(132, 204, 22, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2),
+    0 0 8px rgba(56, 189, 248, 0.3);
     white-space: nowrap;
     z-index: 3;
     animation: pulse 0.3s ease;

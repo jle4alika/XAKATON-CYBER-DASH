@@ -63,6 +63,28 @@
     max-height: 340px;
     overflow-y: auto;
     padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(132, 204, 22, 0.5) rgba(15, 23, 42, 0.3);
+}
+
+/* Кастомный скроллбар для WebKit браузеров (Chrome, Safari, Edge) */
+.eventList::-webkit-scrollbar {
+    width: 8px;
+}
+
+.eventList::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 4px;
+}
+
+.eventList::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(132, 204, 22, 0.6) 0%, rgba(132, 204, 22, 0.4) 100%);
+    border-radius: 4px;
+    border: 1px solid rgba(132, 204, 22, 0.2);
+}
+
+.eventList::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(132, 204, 22, 0.8) 0%, rgba(132, 204, 22, 0.6) 100%);
 }
 
 .stack {

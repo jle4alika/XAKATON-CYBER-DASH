@@ -12,7 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from backend.database.chrome.db import memory_store
-from backend.database.postgr.models import Agent, Event, GroupChat, Interaction, Memory, Relationship
+from backend.database.postgr.models import Agent, Event, GroupChat, Interaction, Memory, Plan, Relationship
 from backend.database.postgr.models.groupchat import group_chat_agents
 
 from backend.project_config import settings
@@ -147,6 +147,10 @@ class SimulationEngine:
             else:
                 await self._try_agent_chat(session, agent)
 
+            # С небольшой вероятностью создаем или обновляем планы агента
+            if random.random() < 0.15:  # 15% вероятность создания плана
+                await self._create_or_update_plan(session, agent)
+
     async def _try_agent_chat(self, session: AsyncSession, agent: Agent) -> None:
         """Попытка агента написать сообщение в общий групповой чат (не адресовано конкретному агенту)."""
         # Безопасно пробуем интерпретировать id как UUID.
@@ -244,9 +248,80 @@ class SimulationEngine:
         session.add(agent)
         session.add(event)
 
+        # Создаем/обновляем отношения между отправителем и всеми участниками чата
+        # Также создаем взаимодействия для всех участников и обновляем их настроение
+        relationships_to_update = []
+        interactions_to_create = []
+
+        # Получаем объекты всех участников чата для обновления их настроения
+        member_agents_result = await session.execute(
+            select(Agent).where(Agent.id.in_([uuid.UUID(mid) for mid in member_ids if mid != agent.id]))
+        )
+        member_agents = member_agents_result.scalars().all()
+
+        for member_id in member_ids:
+            if member_id != agent.id:
+                try:
+                    # Получаем объект участника
+                    member_agent = next((a for a in member_agents if str(a.id) == member_id), None)
+                    if not member_agent:
+                        continue
+
+                    # Создаем/обновляем отношения
+                    relationship = await self._get_or_create_relationship(
+                        session, agent.id, member_id
+                    )
+
+                    # Влияние сообщения на настроение и отношения зависит от контекста
+                    # Положительные сообщения улучшают отношения, отрицательные - ухудшают
+                    base_affinity_delta = random.uniform(0.01, 0.04)
+                    # Если отношения уже положительные, они улучшаются быстрее
+                    if relationship.affinity > 0:
+                        affinity_delta = base_affinity_delta * 1.5
+                    else:
+                        affinity_delta = base_affinity_delta
+
+                    relationship.affinity = max(-1.0, min(1.0, relationship.affinity + affinity_delta))
+                    relationship.strength = min(1.0, relationship.strength + 0.01)
+                    session.add(relationship)
+                    relationships_to_update.append((member_id, relationship))
+
+                    # Создаем взаимодействие для участника чата
+                    interaction = Interaction(
+                        agent_id=member_id,
+                        partner=agent.name,
+                        description=f"Услышал сообщение в чате «{group_chat.name}»: {message_text[:100]}",
+                    )
+                    session.add(interaction)
+                    interactions_to_create.append(interaction)
+
+                    # Обновляем настроение участника на основе отношения к отправителю
+                    # Если отношения хорошие, настроение улучшается, если плохие - ухудшается
+                    mood_influence = relationship.affinity * 0.02  # Влияние от -0.02 до +0.02
+                    member_agent.mood = max(0.0, min(1.0, member_agent.mood + mood_influence))
+                    member_agent.energy = max(0, min(100, member_agent.energy - 1))  # Небольшая трата энергии
+                    session.add(member_agent)
+
+                except Exception as e:
+                    logger.warning(f"Ошибка при обновлении отношения с {member_id}: {e}")
+
+        # Создаем взаимодействие для отправителя
+        sender_interaction = Interaction(
+            agent_id=agent.id,
+            partner=f"участники чата «{group_chat.name}»",
+            description=f"Написал в чат «{group_chat.name}»: {message_text[:100]}",
+        )
+        session.add(sender_interaction)
+
+        # Улучшаем влияние сообщения на настроение отправителя на основе успешного общения
+        # Если в чате много участников, настроение улучшается больше
+        participants_bonus = len(member_ids) * 0.01
+        mood_delta = random.uniform(-0.03, 0.08) + participants_bonus
+        agent.mood = max(0.0, min(1.0, agent.mood + mood_delta))
+
         # Сохраняем в память с вероятностью
         memory_payload = None
-        if random.random() < 0.4:
+        if random.random() < 0.5:  # Увеличиваем вероятность сохранения в память
             memory_payload = await memory_store.add_memory(
                 agent_id=agent.id,
                 description=f"Общался в чате «{group_chat.name}»: {message_text}",
@@ -282,32 +357,29 @@ class SimulationEngine:
                 "data": {"id": agent.id, "mood": agent.mood, "energy": agent.energy},
             }
         )
-        # Для групповый сообщений не меняем отношения между конкретными агентами
 
-        if memory_payload:
+        # Broadcast обновления отношений
+        for member_id, relationship in relationships_to_update:
             await broker.broadcast(
                 {
-                    "type": "memory_created",
-                    "data": {"agent_id": agent.id, **memory_payload.as_response()},
+                    "type": "relation_changed",
+                    "data": {
+                        "source": agent.id,
+                        "target": member_id,
+                        "affinity": relationship.affinity,
+                        "strength": relationship.strength,
+                    },
                 }
             )
 
-        await broker.broadcast(
-            {
-                "type": "event_created",
-                "data": {
-                    "id": event.id,
-                    "description": event.description,
-                    "timestamp": event.created_at.isoformat(),
-                },
-            }
-        )
-        await broker.broadcast(
-            {
-                "type": "agent_update",
-                "data": {"id": agent.id, "mood": agent.mood, "energy": agent.energy},
-            }
-        )
+        # Broadcast обновления настроения для всех участников чата
+        for member_agent in member_agents:
+            await broker.broadcast(
+                {
+                    "type": "agent_update",
+                    "data": {"id": str(member_agent.id), "mood": member_agent.mood, "energy": member_agent.energy},
+                }
+            )
 
         if memory_payload:
             await broker.broadcast(
@@ -616,3 +688,97 @@ class SimulationEngine:
         if llm_text:
             return f"{agent.name} {llm_text}"
         return f"{agent.name} {agent.current_task}"
+
+    async def _create_or_update_plan(self, session: AsyncSession, agent: Agent) -> None:
+        """
+        Создает или обновляет план для агента на основе его текущего состояния и воспоминаний.
+        """
+        # Проверяем, есть ли у агента активные планы
+        result = await session.execute(
+            select(Plan).where(
+                Plan.agent_id == agent.id,
+                Plan.status.in_(["active", "planned", "in-progress"])
+            ).limit(1)
+        )
+        existing_plan = result.scalars().first()
+
+        # Если планов нет или с небольшой вероятностью создаем новый
+        if not existing_plan or random.random() < 0.1:
+            # Получаем контекст чата для более релевантных планов
+            group_chat = await self._get_agent_chat(session, agent)
+            chat_name = group_chat.name if group_chat else "город"
+
+            # Генерируем план на основе текущего состояния агента
+            plan_titles_positive = [
+                "Изучить новые технологии",
+                "Улучшить отношения с другими агентами",
+                f"Исследовать {chat_name}",
+                "Развить навыки общения",
+                "Найти интересные места в городе",
+                "Помочь другим агентам",
+                "Изучить историю кибер-города",
+            ]
+
+            plan_titles_neutral = [
+                "Изучить новые технологии",
+                "Улучшить отношения с другими агентами",
+                f"Исследовать {chat_name}",
+                "Развить навыки общения",
+                "Найти интересные места",
+            ]
+
+            plan_titles_negative = [
+                "Улучшить настроение",
+                "Найти поддержку",
+                "Отдохнуть",
+                "Разобраться в проблемах",
+                "Восстановить энергию",
+            ]
+
+            plan_descriptions = [
+                "Агент планирует изучить новые технологии и улучшить свои навыки",
+                "Агент хочет улучшить отношения с другими участниками города",
+                "Агент планирует исследовать различные места и найти что-то интересное",
+                "Агент хочет развить свои навыки общения и взаимодействия",
+                "Агент планирует помочь другим агентам в их делах",
+            ]
+
+            # Выбираем план на основе настроения и энергии
+            if agent.mood > 0.7:
+                plan_title = random.choice(plan_titles_positive)
+            elif agent.mood < 0.4:
+                plan_title = random.choice(plan_titles_negative)
+            else:
+                plan_title = random.choice(plan_titles_neutral)
+
+            plan_description = random.choice(plan_descriptions)
+
+            plan = Plan(
+                agent_id=agent.id,
+                title=plan_title,
+                description=plan_description,
+                status="active" if random.random() < 0.7 else "planned",
+            )
+            session.add(plan)
+            await session.commit()
+            await session.refresh(plan)
+            logger.info(f"Создан план для агента {agent.name}: {plan_title} (id: {plan.id})")
+
+    async def _get_agent_chat(self, session: AsyncSession, agent: Agent) -> Optional[GroupChat]:
+        """Получает первый групповой чат агента для контекста."""
+        try:
+            agent_uuid = uuid.UUID(agent.id)
+            result_chats = await session.execute(
+                select(group_chat_agents.c.group_chat_id).where(
+                    group_chat_agents.c.agent_id == agent_uuid
+                ).limit(1)
+            )
+            chat_ids = [row[0] for row in result_chats.fetchall()]
+            if chat_ids:
+                chat_result = await session.execute(
+                    select(GroupChat).where(GroupChat.id == chat_ids[0])
+                )
+                return chat_result.scalars().first()
+        except (ValueError, TypeError):
+            pass
+        return None

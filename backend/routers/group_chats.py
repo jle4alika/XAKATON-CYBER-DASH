@@ -4,6 +4,7 @@
 
 import logging
 import json
+import random
 from typing import List
 import uuid
 
@@ -13,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database.chrome.db import memory_store
 from backend.database.postgr.db import get_session
-from backend.database.postgr.models import Agent, Event, Memory, GroupChat
+from backend.database.postgr.models import Agent, Event, Memory, GroupChat, Interaction
 from backend.database.postgr.models.groupchat import group_chat_agents
 from backend.database.postgr.models import User
 from backend.schemas import (
@@ -29,6 +30,17 @@ from backend.services.realtime import broker
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/group-chats", tags=["group-chats"])
+
+
+def _parse_uuid_list(values: list[str]) -> list[uuid.UUID]:
+    """Парсит список строковых UUID в список uuid.UUID, иначе бросает 422."""
+    parsed: list[uuid.UUID] = []
+    for v in values:
+        try:
+            parsed.append(uuid.UUID(str(v)))
+        except (ValueError, TypeError, AttributeError):
+            raise HTTPException(status_code=422, detail=f"Invalid UUID: {v}")
+    return parsed
 
 
 def _serialize_event(event: Event) -> EventSchema:
@@ -54,21 +66,23 @@ async def create_group_chat(
     """
     # Проверяем, что указанные агенты принадлежат текущему пользователю
     if payload.agent_ids:
+        requested_agent_ids = _parse_uuid_list(payload.agent_ids)
         result = await session.execute(
             select(Agent).where(
-                Agent.id.in_(payload.agent_ids),
+                Agent.id.in_(requested_agent_ids),
                 Agent.user_id == current_user.id
             )
         )
         valid_agents = result.scalars().all()
-        valid_agent_ids = [str(agent.id) for agent in valid_agents]
+        valid_agent_ids_uuid = [agent.id for agent in valid_agents]
+        valid_agent_ids = [str(agent_id) for agent_id in valid_agent_ids_uuid]
 
         # Проверяем, что все указанные агенты существуют и принадлежат пользователю
-        invalid_agent_ids = set(payload.agent_ids) - set(valid_agent_ids)
+        invalid_agent_ids = set(requested_agent_ids) - set(valid_agent_ids_uuid)
         if invalid_agent_ids:
             raise HTTPException(
                 status_code=400,
-                detail=f"Agents not found or don't belong to user: {invalid_agent_ids}"
+                detail=f"Agents not found or don't belong to user: {[str(x) for x in invalid_agent_ids]}"
             )
     else:
         valid_agent_ids = []
@@ -159,7 +173,7 @@ async def list_group_chats(
 
 @router.get("/{group_chat_id}", response_model=GroupChatSchema)
 async def get_group_chat(
-        group_chat_id: str,
+        group_chat_id: uuid.UUID,
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_active_user)
 ) -> GroupChatSchema:
@@ -196,7 +210,7 @@ async def get_group_chat(
 
 @router.put("/{group_chat_id}", response_model=GroupChatSchema)
 async def update_group_chat(
-        group_chat_id: str,
+        group_chat_id: uuid.UUID,
         payload: GroupChatUpdate,
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_active_user)
@@ -223,21 +237,23 @@ async def update_group_chat(
         # Проверяем, что все указанные агенты принадлежат текущему пользователю
         valid_agents = []
         if payload.agent_ids:
+            requested_agent_ids = _parse_uuid_list(payload.agent_ids)
             result = await session.execute(
                 select(Agent).where(
-                    Agent.id.in_(payload.agent_ids),
+                    Agent.id.in_(requested_agent_ids),
                     Agent.user_id == current_user.id
                 )
             )
             valid_agents = result.scalars().all()
-            valid_agent_ids = [str(agent.id) for agent in valid_agents]
+            valid_agent_ids_uuid = [agent.id for agent in valid_agents]
+            valid_agent_ids = [str(agent_id) for agent_id in valid_agent_ids_uuid]
 
             # Проверяем, что все указанные агенты существуют и принадлежат пользователю
-            invalid_agent_ids = set(payload.agent_ids) - set(valid_agent_ids)
+            invalid_agent_ids = set(requested_agent_ids) - set(valid_agent_ids_uuid)
             if invalid_agent_ids:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Agents not found or don't belong to user: {invalid_agent_ids}"
+                    detail=f"Agents not found or don't belong to user: {[str(x) for x in invalid_agent_ids]}"
                 )
         else:
             valid_agent_ids = []
@@ -282,7 +298,7 @@ async def update_group_chat(
 
 @router.delete("/{group_chat_id}", status_code=204)
 async def delete_group_chat(
-        group_chat_id: str,
+        group_chat_id: uuid.UUID,
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_active_user)
 ) -> None:
@@ -309,7 +325,7 @@ async def delete_group_chat(
 
 @router.post("/{group_chat_id}/message", response_model=List[EventSchema])
 async def send_message_to_group_chat(
-        group_chat_id: str,
+        group_chat_id: uuid.UUID,
         payload: MessagePayload,
         session: AsyncSession = Depends(get_session),
         current_user: User = Depends(get_current_active_user)
@@ -332,7 +348,7 @@ async def send_message_to_group_chat(
             group_chat_agents.c.group_chat_id == group_chat.id
         )
     )
-    agent_ids = [str(row[0]) for row in agent_rows.fetchall()]
+    agent_ids = [row[0] for row in agent_rows.fetchall()]
 
     if not agent_ids:
         raise HTTPException(status_code=400, detail="Group chat has no agents")
@@ -345,18 +361,44 @@ async def send_message_to_group_chat(
 
     for agent in agents:
         event = Event(
-            description=payload.message,
+            description=f"Пользователь написал в чат «{group_chat.name}»: {payload.message}",
             actor_id=agent.id,
-            type="message",
-            metadata_json=json.dumps({"group_chat_id": str(group_chat.id)}),
+            type="chat_group",
+            metadata_json=json.dumps({"group_chat_id": str(group_chat.id), "from_user": True}),
         )
         session.add(event)
         await session.flush()
 
         memory = Memory(
-            agent_id=agent.id, description=payload.message, emotion=payload.emotion
+            agent_id=agent.id,
+            description=f"Получил сообщение от пользователя в чате «{group_chat.name}»: {payload.message}",
+            emotion=payload.emotion
         )
         session.add(memory)
+
+        # Создаем взаимодействие для агента
+        interaction = Interaction(
+            agent_id=agent.id,
+            partner="Пользователь",
+            description=f"Получил сообщение в чате «{group_chat.name}»: {payload.message[:100]}",
+        )
+        session.add(interaction)
+
+        # Влияние сообщения на настроение агента зависит от эмоции сообщения
+        mood_delta = 0.0
+        if payload.emotion:
+            emotion_lower = payload.emotion.lower()
+            if "positive" in emotion_lower or "радость" in emotion_lower or "счастье" in emotion_lower:
+                mood_delta = random.uniform(0.02, 0.08)
+            elif "negative" in emotion_lower or "грусть" in emotion_lower or "печаль" in emotion_lower:
+                mood_delta = random.uniform(-0.08, -0.02)
+            elif "neutral" in emotion_lower or "нейтрально" in emotion_lower:
+                mood_delta = random.uniform(-0.02, 0.02)
+
+        # Обновляем настроение и энергию агента
+        agent.mood = max(0.0, min(1.0, agent.mood + mood_delta))
+        agent.energy = max(0, min(100, agent.energy - 1))  # Небольшая трата энергии на обработку сообщения
+        session.add(agent)
 
         events.append(event)
 
@@ -380,6 +422,15 @@ async def send_message_to_group_chat(
             }
         )
         serialized_events.append(_serialize_event(event))
+
+    # Broadcast обновления настроения для всех агентов
+    for agent in agents:
+        await broker.broadcast(
+            {
+                "type": "agent_update",
+                "data": {"id": str(agent.id), "mood": agent.mood, "energy": agent.energy},
+            }
+        )
 
     logger.info(
         "Отправлено групповое сообщение в чат chat_id=%s для user_id=%s, создано событий=%d",
