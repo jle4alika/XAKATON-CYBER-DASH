@@ -23,6 +23,17 @@ from backend.services.realtime import broker
 logger = logging.getLogger(__name__)
 
 
+def _canon_uuid_str(value: str) -> Optional[str]:
+    """
+    Нормализует строку UUID в каноничную форму.
+    Возвращает None, если это не UUID.
+    """
+    try:
+        return str(uuid.UUID(str(value)))
+    except (ValueError, TypeError, AttributeError):
+        return None
+
+
 class SimulationEngine:
     """
     Простой симулятор событий и настроений агентов.
@@ -71,25 +82,24 @@ class SimulationEngine:
         """
         Получить список тем из групповых чатов, в которых участвуют оба агента.
         """
-        # Безопасно пробуем интерпретировать id как UUID. Если id "старый" (не UUID),
-        # считаем, что у агента нет групповых чатов.
-        try:
-            agent1_uuid = uuid.UUID(agent1.id)
-            agent2_uuid = uuid.UUID(agent2.id)
-        except (ValueError, TypeError):
+        # `Agent.id` хранится как String(64) (uuid-строка).
+        # Нормализуем формат UUID и работаем со строками, т.к. group_chat_agents.c.agent_id тоже String.
+        agent1_id = _canon_uuid_str(agent1.id)
+        agent2_id = _canon_uuid_str(agent2.id)
+        if not agent1_id or not agent2_id:
             return ["общение в кибер-городе"]
 
         # Получаем множества ID чатов для каждого агента через таблицу связей
         result1 = await session.execute(
             select(group_chat_agents.c.group_chat_id).where(
-                group_chat_agents.c.agent_id == agent1_uuid
+                group_chat_agents.c.agent_id == agent1_id
             )
         )
         chats1 = {row[0] for row in result1.fetchall()}
 
         result2 = await session.execute(
             select(group_chat_agents.c.group_chat_id).where(
-                group_chat_agents.c.agent_id == agent2_uuid
+                group_chat_agents.c.agent_id == agent2_id
             )
         )
         chats2 = {row[0] for row in result2.fetchall()}
@@ -153,17 +163,14 @@ class SimulationEngine:
 
     async def _try_agent_chat(self, session: AsyncSession, agent: Agent) -> None:
         """Попытка агента написать сообщение в общий групповой чат (не адресовано конкретному агенту)."""
-        # Безопасно пробуем интерпретировать id как UUID.
-        try:
-            agent_uuid = uuid.UUID(agent.id)
-        except (ValueError, TypeError):
-            # Старые агенты с не-UUID id не состоят в новых групповых чатах
+        agent_id = _canon_uuid_str(agent.id)
+        if not agent_id:
             return
 
         # Выбираем любой групповой чат, в котором состоит агент
         result_chats = await session.execute(
             select(group_chat_agents.c.group_chat_id).where(
-                group_chat_agents.c.agent_id == agent_uuid
+                group_chat_agents.c.agent_id == agent_id
             )
         )
         chat_ids = [row[0] for row in result_chats.fetchall()]
@@ -255,7 +262,7 @@ class SimulationEngine:
 
         # Получаем объекты всех участников чата для обновления их настроения
         member_agents_result = await session.execute(
-            select(Agent).where(Agent.id.in_([uuid.UUID(mid) for mid in member_ids if mid != agent.id]))
+            select(Agent).where(Agent.id.in_([mid for mid in member_ids if mid != agent.id]))
         )
         member_agents = member_agents_result.scalars().all()
 
@@ -405,9 +412,10 @@ class SimulationEngine:
         """Выбирает собеседника для агента на основе отношений и случайности."""
         # Сначала пытаемся общаться с агентами, с которыми есть общий групповой чат
         # Получаем ID чатов, в которых состоит агент
+        agent_id = _canon_uuid_str(agent.id) or str(agent.id)
         result_chats = await session.execute(
             select(group_chat_agents.c.group_chat_id).where(
-                group_chat_agents.c.agent_id == uuid.UUID(agent.id)
+                group_chat_agents.c.agent_id == agent_id
             )
         )
         chat_ids = [row[0] for row in result_chats.fetchall()]
@@ -766,19 +774,18 @@ class SimulationEngine:
 
     async def _get_agent_chat(self, session: AsyncSession, agent: Agent) -> Optional[GroupChat]:
         """Получает первый групповой чат агента для контекста."""
-        try:
-            agent_uuid = uuid.UUID(agent.id)
-            result_chats = await session.execute(
-                select(group_chat_agents.c.group_chat_id).where(
-                    group_chat_agents.c.agent_id == agent_uuid
-                ).limit(1)
+        agent_id = _canon_uuid_str(agent.id)
+        if not agent_id:
+            return None
+        result_chats = await session.execute(
+            select(group_chat_agents.c.group_chat_id).where(
+                group_chat_agents.c.agent_id == agent_id
+            ).limit(1)
+        )
+        chat_ids = [row[0] for row in result_chats.fetchall()]
+        if chat_ids:
+            chat_result = await session.execute(
+                select(GroupChat).where(GroupChat.id == chat_ids[0])
             )
-            chat_ids = [row[0] for row in result_chats.fetchall()]
-            if chat_ids:
-                chat_result = await session.execute(
-                    select(GroupChat).where(GroupChat.id == chat_ids[0])
-                )
-                return chat_result.scalars().first()
-        except (ValueError, TypeError):
-            pass
+            return chat_result.scalars().first()
         return None

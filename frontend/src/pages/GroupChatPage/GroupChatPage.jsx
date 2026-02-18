@@ -28,17 +28,39 @@ export default function GroupChatPage() {
     const [selectedAgents, setSelectedAgents] = useState([]);
 
     const navigate = useNavigate();
+    const [authToken, setAuthToken] = useState(() => localStorage.getItem('token'));
 
-    // Fetch group chats and agents on component mount
+    // Keep token in sync (login/logout in another tab, token refresh, etc.)
     useEffect(() => {
-        fetchGroupChats();
-        fetchAgents();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        const syncToken = () => setAuthToken(localStorage.getItem('token'));
+        window.addEventListener('storage', syncToken);
+        window.addEventListener('focus', syncToken);
+        const intervalId = setInterval(syncToken, 1000);
+        return () => {
+            window.removeEventListener('storage', syncToken);
+            window.removeEventListener('focus', syncToken);
+            clearInterval(intervalId);
+        };
     }, []);
 
-    const fetchGroupChats = async () => {
+    // Fetch group chats and agents when token changes / page becomes active
+    useEffect(() => {
+        if (!authToken) {
+            navigate('/login');
+            return;
+        }
+        setError('');
+        setSelectedChat(null);
+        setShowCreateForm(false);
+        resetForm();
+        fetchGroupChats(authToken);
+        fetchAgents(authToken);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authToken]);
+
+    const fetchGroupChats = async (tokenOverride) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = tokenOverride ?? localStorage.getItem('token');
             if (!token) {
                 navigate('/login');
                 return;
@@ -67,9 +89,9 @@ export default function GroupChatPage() {
         }
     };
 
-    const fetchAgents = async () => {
+    const fetchAgents = async (tokenOverride) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = tokenOverride ?? localStorage.getItem('token');
             if (!token) {
                 navigate('/login');
                 return;
@@ -100,9 +122,19 @@ export default function GroupChatPage() {
         e.preventDefault();
 
         try {
-            const token = localStorage.getItem('token');
+            const token = authToken ?? localStorage.getItem('token');
             if (!token) {
                 navigate('/login');
+                return;
+            }
+
+            // Guard against stale agent list: only allow selecting agents visible for current token
+            const allowedAgentIdSet = new Set((agents || []).map((a) => String(a.id)));
+            const sanitizedSelectedAgents = (selectedAgents || []).map(String).filter((id) => allowedAgentIdSet.has(id));
+            if (sanitizedSelectedAgents.length !== (selectedAgents || []).length) {
+                setError('Список агентов устарел (возможна смена пользователя). Обновите страницу и выберите агентов заново.');
+                // Best-effort refresh
+                fetchAgents(token);
                 return;
             }
 
@@ -115,7 +147,7 @@ export default function GroupChatPage() {
                 body: JSON.stringify({
                     name: chatName,
                     description: chatDescription,
-                    agent_ids: selectedAgents,
+                    agent_ids: sanitizedSelectedAgents,
                 }),
             });
 
@@ -128,7 +160,14 @@ export default function GroupChatPage() {
                 navigate('/login');
             } else {
                 const errorData = await response.json();
-                setError(errorData.detail || 'Ошибка при создании чата');
+                const detail = errorData?.detail;
+                if (typeof detail === 'string' && detail.includes("Agents not found or don't belong to user")) {
+                    setError('Вы выбрали агентов, которые не принадлежат текущему пользователю. Обновите страницу и выберите агентов заново.');
+                    // Best-effort refresh
+                    fetchAgents(token);
+                } else {
+                    setError(detail || 'Ошибка при создании чата');
+                }
             }
         } catch (err) {
             setError('Ошибка сети при создании чата');
@@ -387,7 +426,14 @@ export default function GroupChatPage() {
                 <h2 className="panel-title" style={{margin: 0}}>Групповые чаты</h2>
                 <button
                     className="btn primary"
-                    onClick={() => setShowCreateForm(!showCreateForm)}
+                    onClick={() => {
+                        const next = !showCreateForm;
+                        setShowCreateForm(next);
+                        if (next) {
+                            // Refresh agents list when opening create form to avoid stale ids
+                            fetchAgents(authToken ?? localStorage.getItem('token'));
+                        }
+                    }}
                 >
                     {showCreateForm ? 'Отмена' : 'Создать чат'}
                 </button>

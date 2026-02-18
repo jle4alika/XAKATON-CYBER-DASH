@@ -32,12 +32,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/group-chats", tags=["group-chats"])
 
 
-def _parse_uuid_list(values: list[str]) -> list[uuid.UUID]:
-    """Парсит список строковых UUID в список uuid.UUID, иначе бросает 422."""
-    parsed: list[uuid.UUID] = []
+def _parse_uuid_list(values: list[str]) -> list[str]:
+    """
+    Парсит список строковых UUID и нормализует их в каноничную строку.
+
+    Важно: `Agent.id` в модели хранится как String, поэтому здесь возвращаем list[str],
+    но при этом валидируем формат UUID (иначе 422).
+    """
+    parsed: list[str] = []
     for v in values:
         try:
-            parsed.append(uuid.UUID(str(v)))
+            parsed.append(str(uuid.UUID(str(v))))
         except (ValueError, TypeError, AttributeError):
             raise HTTPException(status_code=422, detail=f"Invalid UUID: {v}")
     return parsed
@@ -67,6 +72,11 @@ async def create_group_chat(
     # Проверяем, что указанные агенты принадлежат текущему пользователю
     if payload.agent_ids:
         requested_agent_ids = _parse_uuid_list(payload.agent_ids)
+        logger.info(
+            "Создание группового чата: user_id=%s, requested_agent_ids=%s",
+            current_user.id,
+            requested_agent_ids,
+        )
         result = await session.execute(
             select(Agent).where(
                 Agent.id.in_(requested_agent_ids),
@@ -74,12 +84,16 @@ async def create_group_chat(
             )
         )
         valid_agents = result.scalars().all()
-        valid_agent_ids_uuid = [agent.id for agent in valid_agents]
-        valid_agent_ids = [str(agent_id) for agent_id in valid_agent_ids_uuid]
+        valid_agent_ids = [str(agent.id) for agent in valid_agents]
 
         # Проверяем, что все указанные агенты существуют и принадлежат пользователю
-        invalid_agent_ids = set(requested_agent_ids) - set(valid_agent_ids_uuid)
+        invalid_agent_ids = set(requested_agent_ids) - set(valid_agent_ids)
         if invalid_agent_ids:
+            logger.warning(
+                "Невалидные agent_ids при создании группового чата: user_id=%s invalid_agent_ids=%s",
+                current_user.id,
+                sorted([str(x) for x in invalid_agent_ids]),
+            )
             raise HTTPException(
                 status_code=400,
                 detail=f"Agents not found or don't belong to user: {[str(x) for x in invalid_agent_ids]}"
@@ -99,12 +113,12 @@ async def create_group_chat(
     await session.flush()
 
     # Явно создаём связи в таблице group_chat_agents,
-    # приводя строковые id агентов к UUID
+    # agent_id хранится как String(64)
     for agent_id in valid_agent_ids:
         await session.execute(
             insert(group_chat_agents).values(
                 group_chat_id=group_chat.id,
-                agent_id=uuid.UUID(agent_id),
+                agent_id=agent_id,
             )
         )
 
@@ -245,11 +259,10 @@ async def update_group_chat(
                 )
             )
             valid_agents = result.scalars().all()
-            valid_agent_ids_uuid = [agent.id for agent in valid_agents]
-            valid_agent_ids = [str(agent_id) for agent_id in valid_agent_ids_uuid]
+            valid_agent_ids = [str(agent.id) for agent in valid_agents]
 
             # Проверяем, что все указанные агенты существуют и принадлежат пользователю
-            invalid_agent_ids = set(requested_agent_ids) - set(valid_agent_ids_uuid)
+            invalid_agent_ids = set(requested_agent_ids) - set(valid_agent_ids)
             if invalid_agent_ids:
                 raise HTTPException(
                     status_code=400,
@@ -268,7 +281,7 @@ async def update_group_chat(
             await session.execute(
                 insert(group_chat_agents).values(
                     group_chat_id=group_chat.id,
-                    agent_id=uuid.UUID(agent_id),
+                    agent_id=agent_id,
                 )
             )
 
