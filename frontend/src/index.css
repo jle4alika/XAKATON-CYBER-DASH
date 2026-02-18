@@ -1,0 +1,4 @@
+/* Главный файл стилей - импортирует все остальные */
+@import './styles/global.css';
+@import './styles/utilities.css';
+

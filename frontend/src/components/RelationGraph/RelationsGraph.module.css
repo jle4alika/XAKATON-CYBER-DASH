@@ -1,0 +1,54 @@
+.panel {
+    background: var(--bg);
+    border: 3px solid var(--lime-dark);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+    position: relative;
+    min-height: 420px;
+    transition: 0.5s;
+}
+.panel:hover {
+    border: 3px solid var(--lime);
+}
+
+.forcegraph {
+    aspect-ratio: auto !important;
+}
+
+.forcegraph canvas {
+    aspect-ratio: auto !important;
+}
+
+.panelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.panelTitle {
+    margin: 0;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+}
+
+.tooltip {
+    position: absolute;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(8px);
+    max-width: 200px;
+}

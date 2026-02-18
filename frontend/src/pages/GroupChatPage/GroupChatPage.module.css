@@ -1,0 +1,453 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.panel {
+    color: var(--text);
+    border: 3px solid var(--lime-dark);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+    transition: 0.5s;
+    margin: 10px;
+    margin-bottom: 5px;
+}
+
+.panelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.panelTitle {
+    margin: 0;
+    color: var(--text);
+}
+
+.header h1 {
+    color: #fff;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.createButton {
+    background: #4a90e2;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+.createButton:hover {
+    background: #3a7bc8;
+}
+
+.error {
+    background: #ff4444;
+    color: white;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.closeError {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.createForm {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.createForm h2 {
+    color: #fff;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+}
+
+.formGroup label {
+    display: block;
+    color: #ddd;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.formGroup input,
+.formGroup textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    background: rgba(15, 23, 42, 0.7);
+    color: #e2e8f0;
+    font-size: 0.95rem;
+}
+
+.formGroup textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    background: rgba(15, 23, 42, 0.7);
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.agentsList {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 4px;
+    padding: 10px;
+    background: rgba(15, 23, 42, 0.7);
+}
+
+.agentItem {
+    padding: 8px 0;
+}
+
+.agentItem label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0;
+    color: #ddd;
+}
+
+.agentItem input {
+    width: auto;
+    margin-right: 10px;
+}
+
+.formActions {
+    display: flex;
+    gap: 10px;
+}
+
+.submitButton,
+.resetButton {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.submitButton {
+    background: #4a90e2;
+    color: white;
+}
+
+.submitButton:hover {
+    background: #3a7bc8;
+}
+
+.resetButton {
+    background: #666;
+    color: white;
+}
+
+.resetButton:hover {
+    background: #555;
+}
+
+.content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+}
+
+.chatList h2 {
+    color: #fff;
+    margin-top: 0;
+}
+
+.noChats {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.chats {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chatItem {
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.chatItem:hover {
+    background: rgba(0, 24, 0, 0.35);
+    border-color: var(--lime);
+}
+
+.chatItem.selected {
+    background: rgba(0, 24, 0, 0.35);
+    border-color: var(--lime);
+}
+
+.chatHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.chatHeader h3 {
+    color: #fff;
+    margin: 0 0 10px 0;
+    font-size: 1.2rem;
+}
+
+.deleteButton {
+    background: none;
+    border: none;
+    color: #ff6666;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+}
+
+.deleteButton:hover {
+    color: #ff0000;
+}
+
+.chatDescription {
+    color: #bbb;
+    font-size: 0.9rem;
+}
+
+.chatDescriptionWrapper {
+    margin: 8px 0 10px;
+}
+
+.toggleDescription {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding-left: 5px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.toggleDescription:hover {
+    color: #7dd3fc;
+}
+
+.chatMeta {
+    display: flex;
+    justify-content: space-between;
+    color: #888;
+    font-size: 0.8rem;
+}
+
+.chatView {
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.selectedChat {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.selectedChat h2 {
+    color: #fff;
+    margin-top: 0;
+}
+
+.selectedChatDescription {
+    color: #bbb;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+.selectedChatDescriptionWrapper {
+    margin-bottom: 16px;
+}
+
+.selectedChatAgents h3 {
+    color: #fff;
+    margin-top: 5px;
+    font-size: 1.17rem;
+}
+
+.selectedChatAgents ul {
+    list-style: none;
+    padding-left: 15px;
+    margin: 20px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+}
+
+.selectedChatAgents li {
+    color: #ddd;
+    padding: 5px 0;
+    font-size: 0.85rem;
+}
+
+.chatMessages {
+    margin-top: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.messagesList {
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.noMessages {
+    color: #888;
+    font-style: italic;
+}
+
+.messageItem {
+    list-style: none;
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.messageBubble {
+    max-width: 80%;
+    padding: 8px 10px 4px;
+    border-radius: 14px 14px 14px 4px;
+    background: var(--lime-transparent);
+    border: 1px solid var(--lime-transparent);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.6);
+}
+
+.messageTime {
+    color: #64748b;
+    font-size: 0.7rem;
+}
+
+.messageText {
+    color: #ddd;
+    font-size: 0.9rem;
+}
+
+.messageMeta {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
+}
+
+.messageForm {
+    margin-top: 10px;
+}
+
+.formRow {
+    display: flex;
+    gap: 8px;
+}
+
+.formRow select,
+.formRow input {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background: #333;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.formRow select {
+    min-width: 140px;
+}
+
+.formRow button {
+    padding: 8px 14px;
+    border-radius: 4px;
+    border: none;
+    background: #4a90e2;
+    color: #fff;
+    cursor: pointer;
+}
+
+.formRow button:disabled {
+    background: #555;
+    cursor: default;
+}
+
+.chatActions {
+    display: flex;
+    gap: 10px;
+}
+
+.actionButton {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #4a90e2;
+    color: white;
+    font-size: 1rem;
+}
+
+.actionButton:hover {
+    background: #3a7bc8;
+}
+
+.noChatSelected {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #888;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .content {
+        grid-template-columns: 1fr;
+    }
+
+    .chatView {
+        margin-top: 20px;
+    }
+}
+

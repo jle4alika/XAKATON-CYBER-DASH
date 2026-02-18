@@ -1,0 +1,55 @@
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+    flex: 1;
+}
+
+.panel {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    height: 100%;
+    box-shadow: var(--shadow);
+    transition: 0.5s;
+}
+
+.panel:hover {
+    transform: translateY(-5px);
+}
+
+.panelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.panelTitle {
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+}
+
+.settingsdiv {
+    background: linear-gradient(210deg, var(--cyan) 0%, var(--lime) 100%);
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 5px;
+}
+

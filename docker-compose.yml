@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # PostgreSQL база данных
+  db:
+    image: postgres:15-alpine
+    container_name: cyber_ryvok_db
+    restart: unless-stopped
+    environment:
+      # Можно переопределить через .env файл или переменные окружения
+      POSTGRES_USER: ${POSTGRES_USER:-cyber_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cyber_password}
+      POSTGRES_DB: ${POSTGRES_DB:-cyber_city}
+    env_file:
+      - ./backend/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cyber_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cyber_user}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend FastAPI
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: cyber_ryvok_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - SQLALCHEMY_URL=postgresql+asyncpg://${POSTGRES_USER:-cyber_user}:${POSTGRES_PASSWORD:-cyber_password}@db:5432/${POSTGRES_DB:-cyber_city}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Монтируем код для разработки (можно убрать в production)
+      - ./backend:/app/backend
+      # Монтируем .env файл
+      - ./backend/.env:/app/backend/.env:ro
+      # Монтируем данные ChromaDB (если используется локальное хранилище)
+      - chroma_data:/app/backend/data/chroma
+    networks:
+      - cyber_network
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend React
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    container_name: cyber_ryvok_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    networks:
+      - cyber_network
+
+volumes:
+  postgres_data:
+    driver: local
+  chroma_data:
+    driver: local
+
+networks:
+  cyber_network:
+    driver: bridge

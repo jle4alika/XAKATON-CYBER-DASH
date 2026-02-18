@@ -1,0 +1,50 @@
+/* CSS Variables - общие переменные для всего приложения */
+
+:root {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    line-height: 1.5;
+    font-weight: 400;
+    color: #e2e8f0;
+    background-color: #0f172a;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Основные цвета */
+    --bg: #141512;
+    --card: rgba(30, 41, 59, 0.65);
+    --card-strong: #0f172a;
+    --border: #273449;
+    --text: #e2e8f0;
+    --text-dark: #fff;
+    --muted: #94a3b8;
+
+    /* Акцентные цвета */
+    --accent-green: #22c55e;
+    --accent-yellow: #eab308;
+    --accent-red: #ef4444;
+    --accent-blue: #38bdf8;
+    --1-color: #2CF3FB;
+    --2-color: #78FD79;
+    --3-color: #D2FA19;
+
+    /* Дополнительные цвета для MainPage */
+    --lime: #84cc16;
+    --lime-dark: #65a30d;
+    --cyan: #22d3ee;
+    --cyan-dark: #06b6d4;
+
+    /* Прозрачности для эффектов */
+    --lime-transparent: rgba(132, 204, 22, 0.1);
+
+    /* Тени */
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+
+    /* Градиенты для фона */
+    --glow-cyan: rgba(34, 211, 238, 0.08);
+    --glow-lime: rgba(132, 204, 22, 0.08);
+    --glow-lime-soft: rgba(132, 204, 22, 0.05);
+}
+

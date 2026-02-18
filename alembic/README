@@ -1,0 +1,19 @@
+Async Alembic setup for this project
+====================================
+
+- Конфигурация Alembic находится в файле `alembic.ini`.
+- Асинхронный движок и метадата берутся из `backend.project_config.Settings`
+  и `backend.database.postgr.db.Base`.
+
+Основные команды (запускать из корня проекта):
+
+1. Создать новую миграцию (авто-генерация по моделям):
+   venv\Scripts\alembic.exe revision --autogenerate -m "my message"
+
+2. Применить все миграции:
+   venv\Scripts\alembic.exe upgrade head
+
+3. Откатить на одну миграцию назад:
+   venv\Scripts\alembic.exe downgrade -1
+
+

@@ -1,0 +1,36 @@
+/* Глобальные стили для всего приложения */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Rubik+Mono+One&family=Ruslan+Display&display=swap');
+@import './variables.css';
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: radial-gradient(circle at 20% 20%, var(--glow-cyan), transparent 30%),
+    radial-gradient(circle at 80% 10%, var(--glow-lime), transparent 25%),
+    radial-gradient(circle at 50% 90%, var(--glow-lime-soft), transparent 35%),
+    var(--bg);
+    background-size: 200% 200%;
+    color: var(--text);
+    min-height: 100vh;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h3, h2 {
+    padding-left: 0.5%;
+}
+

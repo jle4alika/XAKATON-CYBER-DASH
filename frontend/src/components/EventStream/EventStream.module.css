@@ -1,0 +1,94 @@
+.panel {
+    border: 3px solid var(--lime-dark);
+    border-radius: 14px;
+    padding: 14px;
+    height: 100%;
+    box-shadow: var(--shadow);
+    transition: 0.5s;
+}
+
+.panel:hover {
+    border: 3px solid var(--lime);
+    transform: translateY(-5px);
+}
+
+
+.panelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.panelTitle {
+    margin: 0;
+}
+
+.badge {
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: #fff;
+}
+
+.status {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.flexBetween {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.error {
+    color: var(--accent-red);
+}
+
+.btn {
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.eventList {
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.eventItem {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.eventTime {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+}
+
+.eventdiv {
+    border-radius: 15px;
+}

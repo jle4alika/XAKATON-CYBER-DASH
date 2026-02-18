@@ -1,0 +1,861 @@
+/* MainPage.module.css */
+
+:root {
+    /* Основные цвета */
+    --bg: #0a0a0a;
+    --text: #ffffff;
+    --text-dark: #1a1a1a;
+    --lime: #84cc16;
+    --lime-dark: #65a30d;
+    --cyan: #22d3ee;
+    --cyan-dark: #06b6d4;
+
+    /* Серые цвета */
+    --gray-600: #4b5563;
+    --gray-800: #1f2937;
+
+    /* Прозрачности для фона */
+    --card-dark: rgba(255, 255, 255, 0.03);
+    --card-dark-hover: rgba(132, 204, 22, 0.05);
+    --bg-overlay: rgba(10, 10, 10, 0.8);
+
+    /* Прозрачности для текста */
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --text-tertiary: rgba(255, 255, 255, 0.4);
+    --text-light: rgba(255, 255, 255, 0.8);
+    --text-on-light: rgba(26, 26, 26, 0.8);
+
+    /* Прозрачности для границ */
+    --border-light: rgba(255, 255, 255, 0.1);
+    --border-lighter: rgba(255, 255, 255, 0.05);
+    --border-lime: rgba(132, 204, 22, 0.3);
+    --border-lime-light: rgba(132, 204, 22, 0.2);
+
+    /* Прозрачности для градиентов фона */
+    --glow-cyan: rgba(34, 211, 238, 0.08);
+    --glow-lime: rgba(132, 204, 22, 0.08);
+    --glow-lime-soft: rgba(132, 204, 22, 0.05);
+
+    /* Прозрачности для эффектов */
+    --lime-transparent: rgba(132, 204, 22, 0.1);
+    --cyan-transparent: rgba(34, 211, 238, 0.1);
+    --lime-transparent-2: rgba(132, 204, 22, 0.2);
+    --lime-transparent-3: rgba(132, 204, 22, 0.3);
+    --lime-transparent-4: rgba(132, 204, 22, 0.4);
+    --lime-transparent-5: rgba(132, 204, 22, 0.5);
+    --lime-transparent-6: rgba(132, 204, 22, 0.6);
+    --cyan-transparent-2: rgba(34, 211, 238, 0.2);
+    --cyan-transparent-3: rgba(34, 211, 238, 0.3);
+    --dark-transparent-3: rgba(10, 10, 10, 0.3);
+    --dark-transparent-4: rgba(10, 10, 10, 0.4);
+
+    /* Тени */
+    --shadow-lime: 0 8px 32px rgba(132, 204, 22, 0.3);
+    --shadow-lime-hover: 0 10px 30px rgba(132, 204, 22, 0.3);
+    --shadow-cyan: 0 8px 32px rgba(34, 211, 238, 0.3);
+    --shadow-btn: 0 4px 16px rgba(132, 204, 22, 0.3);
+    --shadow-btn-hover: 0 8px 24px rgba(132, 204, 22, 0.4);
+
+    /* Градиенты */
+    --gradient-lime-cyan: linear-gradient(135deg, var(--cyan) 0%, var(--lime) 100%);
+    --gradient-cyan: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-dark) 100%);
+    --gradient-chip: linear-gradient(135deg, var(--lime-transparent) 0%, var(--cyan-transparent) 100%);
+    --gradient-pin: linear-gradient(180deg, var(--gray-600) 0%, var(--gray-800) 100%);
+
+    /* Размеры и отступы */
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 20px;
+    --border-radius-2xl: 30px;
+
+    /* Анимации */
+    --transition-fast: 0.3s;
+}
+
+.page {
+    position: relative;
+    min-height: 100vh;
+    color: var(--text);
+    overflow-x: hidden;
+}
+
+.brand {
+    width: 200px;
+}
+
+/* Container */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+}
+
+/* Header */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-lighter);
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logoIcon {
+    width: 40px;
+    height: 40px;
+}
+
+.logoText {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.menu {
+    display: flex;
+    list-style: none;
+    gap: 32px;
+    margin: 0;
+    padding: 0;
+}
+
+.menu a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color var(--transition-fast);
+}
+
+.menu a:hover {
+    color: var(--lime);
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.phoneIcon {
+    cursor: pointer;
+}
+
+.contactBtn {
+    background: var(--lime);
+    color: var(--text-dark);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all var(--transition-fast);
+}
+
+.contactBtn:hover {
+    background: var(--lime-dark);
+    transform: translateY(-2px);
+}
+
+/* Hero Section */
+.hero {
+    padding: 80px 0;
+}
+
+.heroContent {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    margin-bottom: 60px;
+}
+
+.heroTitle {
+    font-size: 56px;
+    font-weight: 800;
+    margin: 0 0 16px 0;
+    line-height: 1.1;
+    letter-spacing: -2px;
+}
+
+.heroTitleLight {
+    background: linear-gradient(135deg, var(--lime) 0%, var(--cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.heroSubtitle {
+    font-size: 24px;
+    color: var(--text-muted);
+    margin: 0 0 32px 0;
+}
+
+.heroTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.tag {
+    background: var(--border-lighter);
+    border: 1px solid var(--border-light);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.heroCta {
+    background: var(--lime);
+    color: var(--text-dark);
+    border: none;
+    padding: 16px 32px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all var(--transition-fast);
+    max-width: 280px;
+}
+
+.heroCta:hover {
+    background: var(--lime-dark);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lime-hover);
+}
+
+/* Hero Visual */
+.heroVisual {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.sunIcon {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    animation: pulse 3s ease-in-out infinite;
+}
+
+.sunIconSmall {
+    position: absolute;
+    bottom: 40px;
+    right: 20px;
+    animation: pulse 3s ease-in-out infinite 1.5s;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(0.95);
+    }
+}
+
+.brainChip {
+    position: relative;
+    z-index: 1;
+}
+
+.chipBase {
+    position: relative;
+    width: 350px;
+    height: 350px;
+}
+
+.chipPins {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.pin {
+    position: absolute;
+    width: 8px;
+    height: 20px;
+    background: var(--gradient-pin);
+    border-radius: 2px;
+    top: -15px;
+}
+
+.pinRight {
+    top: auto;
+    bottom: -15px;
+}
+
+.pinBottom {
+    width: 20px;
+    height: 8px;
+    left: auto;
+    top: auto;
+    bottom: 10px;
+    transform: rotate(90deg);
+}
+
+.chipBody {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 250px;
+    background: var(--gradient-chip);
+    border: 2px solid var(--border-lime);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 60px var(--lime-transparent-2), inset 0 0 60px var(--lime-transparent);
+}
+
+.brainGlow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, var(--lime-transparent-5) 0%, transparent 70%);
+    border-radius: 20px;
+    animation: glow 3s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+.brainIcon {
+    width: 120px;
+    height: 120px;
+    z-index: 1;
+}
+
+/* Partners */
+.partners {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding: 40px 0;
+    border-top: 1px solid var(--border-lighter);
+}
+
+.partnerLogo {
+    color: var(--text-tertiary);
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.6;
+    transition: all var(--transition-fast);
+    padding: 8px 16px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    background: var(--card-dark);
+}
+
+.partnerLogo:hover {
+    opacity: 1;
+    color: var(--lime);
+    border-color: var(--lime);
+    transform: translateY(-2px);
+    background: var(--card-dark-hover);
+}
+
+/* Services Section */
+.services {
+    padding: 80px 0;
+}
+
+.sectionTitle {
+    font-size: 40px;
+    font-weight: 800;
+    margin: 0 0 48px 0;
+}
+
+.servicesGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    align-items: stretch;
+}
+
+/* Базовая карточка */
+.serviceCard {
+    padding: 32px;
+    border-radius: var(--border-radius-xl);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-fast);
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+}
+
+.serviceCard:hover {
+    transform: translateY(-5px);
+}
+
+/* Карточка с изображением - расширяется */
+.serviceCard.hasImage {
+    grid-column: span 2;
+    padding-right: 330px;
+}
+
+.serviceCard h3 {
+    font-size: 24px;
+    margin: 0 0 16px 0;
+}
+
+.serviceCard p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0;
+    text-align: left;
+    flex: 1;
+}
+
+.cardLime {
+    background: var(--lime);
+    color: var(--text-dark);
+    box-shadow: var(--shadow-lime);
+}
+
+.cardLime h3,
+.cardLime p {
+    color: var(--text-dark);
+}
+
+.cardLime p {
+    color: var(--text-on-light);
+}
+
+.cardCyan {
+    background: var(--gradient-lime-cyan);
+    color: var(--text-dark);
+    box-shadow: var(--shadow-cyan);
+}
+
+.cardCyan h3,
+.cardCyan p {
+    color: var(--text-dark);
+}
+
+.cardCyan p {
+    color: var(--text-on-light);
+}
+
+.cardDark {
+    background: var(--card-dark);
+    border: 1px solid var(--border-lime);
+    backdrop-filter: blur(10px);
+}
+
+.cardDark h3 {
+    color: var(--lime);
+}
+
+.cardDark:hover {
+    border-color: var(--lime);
+    background: var(--card-dark-hover);
+}
+
+.cardLimeWide {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #84cc16 0%, #22d3ee 100%);
+    color: var(--text-dark);
+    box-shadow: var(--shadow-lime);
+}
+
+.cardLimeWide h3,
+.cardLimeWide p {
+    color: var(--text-dark);
+}
+
+.cardLimeWide p {
+    color: var(--text-on-light);
+}
+
+.cardDarkWide {
+    grid-column: span 1;
+    background: var(--card-dark);
+    border: 1px solid var(--border-lime);
+}
+
+.cardDarkWide h3 {
+    color: var(--lime);
+}
+
+/* Контейнер для изображения */
+.cardImage {
+    position: absolute;
+    right: 100px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 160px;
+    height: 160px;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+/* Иконка чипа */
+.chipIcon {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chipIconBody {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: var(--gradient-lime-cyan);
+    border-radius: var(--border-radius-md);
+    opacity: 0.3;
+}
+
+/* Стили для изображения */
+.chipIcon img {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    opacity: 1;
+    filter: drop-shadow(0 4px 12px var(--lime-transparent-4));
+    transition: all var(--transition-fast) ease;
+    position: relative;
+    z-index: 1;
+}
+
+/* При наведении на карточку */
+.serviceCard:hover .chipIcon img {
+    opacity: 1;
+    transform: scale(1.08) rotate(3deg);
+    filter: drop-shadow(0 8px 20px rgba(132, 204, 22, 0.6));
+}
+
+.chipIconPins {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--border-lime);
+    border-radius: var(--border-radius-md);
+}
+
+/* Для тёмных карточек */
+.cardDark .chipIcon img {
+    opacity: 1;
+    filter: drop-shadow(0 4px 12px var(--cyan-transparent-3));
+}
+
+.cardDark:hover .chipIcon img {
+    opacity: 1;
+    filter: drop-shadow(0 8px 20px var(--cyan-transparent-3));
+}
+
+/* Для лаймовых карточек */
+.cardLime .chipIcon img {
+    opacity: 1;
+    filter: drop-shadow(0 4px 12px var(--dark-transparent-3));
+}
+
+.cardLime:hover .chipIcon img {
+    opacity: 1;
+    filter: drop-shadow(0 8px 20px var(--dark-transparent-4));
+}
+
+/* Для циановых карточек */
+.cardCyan .chipIcon img {
+    opacity: 1;
+    filter: drop-shadow(0 4px 12px var(--dark-transparent-3));
+}
+
+.cardCyan:hover .chipIcon img {
+    opacity: 1;
+    filter: drop-shadow(0 8px 20px var(--dark-transparent-4));
+}
+
+.stackIcon {
+    position: absolute;
+    right: 40px;
+    bottom: 40px;
+    width: 100px;
+    height: 100px;
+}
+
+.stackLayer {
+    position: absolute;
+    width: 80px;
+    height: 60px;
+    background: var(--lime-transparent-2);
+    border: 2px solid var(--lime);
+    border-radius: var(--border-radius-sm);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.stackBrain {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+}
+
+.datasetInfo {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+}
+
+.datasetInfo strong {
+    color: var(--lime);
+}
+
+.networkIcon {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    width: 120px;
+    height: 120px;
+}
+
+.networkNode {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--lime);
+    border-radius: 50%;
+}
+
+.networkLine {
+    position: absolute;
+    width: 40px;
+    height: 1px;
+    background: var(--border-lime);
+}
+
+/* Advantages Section */
+.advantages {
+    padding: 80px 0;
+}
+
+.stats {
+    display: flex;
+    gap: 60px;
+    margin-bottom: 48px;
+}
+
+.stat {
+    text-align: left;
+}
+
+.statNumber {
+    font-size: 56px;
+    font-weight: 800;
+    background: var(--gradient-lime-cyan);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.statLabel {
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.featuresGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
+}
+
+.featureCard {
+    background: var(--card-dark);
+    border: 1px solid var(--border-lime-light);
+    border-radius: var(--border-radius-lg);
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: all var(--transition-fast);
+}
+
+.featureCard:hover {
+    border-color: var(--lime);
+    background: var(--card-dark-hover);
+    transform: translateY(-3px);
+}
+
+.featureIcon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: var(--lime-transparent);
+    border-radius: var(--border-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.featureIcon svg {
+    stroke: var(--lime);
+}
+
+.featureText h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.bottomCta {
+    background: var(--lime);
+    color: var(--text-dark);
+    border: none;
+    padding: 16px 32px;
+    border-radius: var(--border-radius-2xl);
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-btn);
+}
+
+.bottomCta:hover {
+    background: var(--lime-dark);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-btn-hover);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .heroContent {
+        grid-template-columns: 1fr;
+    }
+
+    .servicesGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .cardLimeWide,
+    .cardDarkWide,
+    .serviceCard.hasImage {
+        grid-column: span 1;
+    }
+
+    .serviceCard.hasImage {
+        padding-right: 180px;
+    }
+
+    .featuresGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .cardImage {
+        width: 140px;
+        height: 140px;
+    }
+
+    .chipIcon img {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    .menu {
+        display: none;
+    }
+
+    .heroTitle {
+        font-size: 40px;
+    }
+
+    .sectionTitle {
+        font-size: 32px;
+    }
+
+    .watermark {
+        display: none;
+    }
+
+    .serviceCard,
+    .serviceCard.hasImage {
+        grid-column: span 1;
+        min-height: auto;
+        padding: 24px;
+        padding-right: 24px;
+    }
+
+    .cardImage {
+        position: relative;
+        right: auto;
+        top: auto;
+        transform: none;
+        width: 100px;
+        height: 100px;
+        margin-top: 20px;
+    }
+
+    .chipIconBody {
+        width: 40px;
+        height: 40px;
+    }
+
+    .chipIcon img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .serviceCard p {
+        text-align: left;
+    }
+}
+
