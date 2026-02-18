@@ -24,9 +24,9 @@ export default function GlobalActionsPanel() {
                 </button>
                 <button className={styles.btn} type="button" onClick={() => fetchEvents()}>Обновить события</button>
                 {/*<button className={styles.btn} type="button" onClick={handleReconnectWs}>Переподключить WS</button>*/}
-                <button className={`${styles.btn} ${styles.btnDanger}`} type="button" onClick={clearErrors}>Очистить
-                    ошибки
-                </button>
+                {/*<button className={`${styles.btn} ${styles.btnDanger}`} type="button" onClick={clearErrors}>Очистить*/}
+                {/*    ошибки*/}
+                {/*</button>*/}
             </div>
         </section>
     )
