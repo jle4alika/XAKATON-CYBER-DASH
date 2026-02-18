@@ -168,7 +168,7 @@ class LLMClient:
         summary = (
                 f"Отправитель: {sender_name} (Настроение: {sender_mood:.2f}, Черты: {sender_text}). "
                 f"Получатель: {receiver_name} (Черты: {receiver_text}). "
-                f"Аффинность: {affinity:.2f}. " + " ".join(persona_parts)
+                f"Близость: {affinity:.2f}. " + " ".join(persona_parts)
         )
         messages.append({"role": "system", "content": summary})
 
