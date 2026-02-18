@@ -21,6 +21,8 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
 }
 
 .panelTitle {
@@ -301,6 +303,7 @@
 }
 
 .selectedChatDescriptionWrapper {
+    margin-left: 10px;
     margin-bottom: 16px;
 }
 
@@ -313,15 +316,23 @@
 .selectedChatAgents ul {
     list-style: none;
     padding-left: 15px;
-    margin: 20px;
+    margin: 0 10px;
     border-radius: 5px;
     border: 1px solid var(--border);
+}
+
+.selectedChatAgents h3 {
+    margin-left: 10px;
 }
 
 .selectedChatAgents li {
     color: #ddd;
     padding: 5px 0;
     font-size: 0.85rem;
+}
+
+.chatMessages h3 {
+    margin-left: 10px;
 }
 
 .chatMessages {
@@ -378,6 +389,7 @@
 
 .messageForm {
     margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .formRow {
@@ -387,6 +399,7 @@
 
 .formRow select,
 .formRow input {
+    margin-left: 10px;
     padding: 8px;
     border-radius: 4px;
     border: 1px solid #444;
@@ -400,6 +413,7 @@
 }
 
 .formRow button {
+    margin-right: 10px;
     padding: 8px 14px;
     border-radius: 4px;
     border: none;
