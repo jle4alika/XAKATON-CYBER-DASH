@@ -5,8 +5,7 @@ User model for authentication and authorization
 import datetime
 import uuid
 from sqlalchemy import func, ForeignKey
-from sqlalchemy import String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String, Text, Uuid
 from sqlalchemy.dialects.sqlite import DATETIME
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List
@@ -23,7 +22,7 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)

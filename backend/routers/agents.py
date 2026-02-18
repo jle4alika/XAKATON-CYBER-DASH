@@ -195,7 +195,7 @@ async def create_agent(
         await session.execute(
             insert(group_chat_agents).values(
                 group_chat_id=default_chat.id,
-                agent_id=uuid.UUID(agent.id),
+                agent_id=agent.id,
             )
         )
 

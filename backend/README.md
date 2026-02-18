@@ -132,3 +132,23 @@ pip install -r requirements.txt
 ```bash
 uvicorn backend.main:app --reload
 ```
+
+## Тесты (pytest, async)
+
+1. Установите зависимости для тестов:
+
+```bash
+pip install -r requirements.txt -r requirements-test.txt
+```
+
+2. Запуск:
+
+```bash
+pytest -q
+```
+
+Примечание:
+
+- Тесты запускаются в режиме `BACKEND_TESTING=1`.
+- URL БД берётся из env: сначала `SQLALCHEMY_TEST_URL`, иначе `SQLALCHEMY_URL`.
+- Если URL БД не задан, тесты используют временную SQLite БД (без внешнего Postgres).

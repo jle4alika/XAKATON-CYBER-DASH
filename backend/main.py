@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -93,14 +94,11 @@ app.add_middleware(
 # Обработчик ошибок JWT
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, exc):
-    if exc.status_code == 401:
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"detail": "Unauthorized"}
-        )
+    # Сохраняем оригинальное сообщение об ошибке, если оно есть
+    detail = exc.detail if hasattr(exc, 'detail') and exc.detail else "Unauthorized"
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail}
+        content={"detail": detail}
     )
 
 
@@ -134,7 +132,11 @@ async def on_startup() -> None:
     logger.info("=" * 80)
     await init_schema()
     await ensure_seed_data(async_session)
-    await sim_engine.start()
+    # В тестах нам не нужен фоновой tick loop: он усложняет изоляцию и может зависеть от внешних сервисов.
+    if os.getenv("BACKEND_TESTING") == "1":
+        logger.info("BACKEND_TESTING=1 — пропускаем запуск SimulationEngine")
+    else:
+        await sim_engine.start()
     logger.info("API started")
 
 

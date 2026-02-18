@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     # PostgreSQL async URL, например: postgresql+asyncpg://user:pass@localhost:5432/db
     SQLALCHEMY_URL: str
+    SQLALCHEMY_TEST_URL: str = "sqlite+aiosqlite:///testdb.sqlite3"
 
     # ChromaDB
     CHROMA_HOST: Optional[str] = None
